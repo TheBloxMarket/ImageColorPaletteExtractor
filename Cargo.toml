@@ -1,15 +1,16 @@
 [package]
 name = "image_color_palette_extractor"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["RoMarketPlace <tbm@ixstudiodev.com>", "Max Thakur <dev@maxthakur.xyz>"]
 edition = "2018"
-repository = ""
+repository = "https://github.com/TheBloxMarket/ImageColorPaletteExtractor"
+license = "MIT"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [features]
-default = ["console_error_panic_hook"]
+default = []
 
 [dependencies]
 wasm-bindgen = "0.2.63"
@@ -32,7 +33,8 @@ wee_alloc = { version = "0.4.5", optional = true }
 kmeans_colors = { version = "0.6", default-features = false }
 # For random number generation in WASM
 # For random number generation
-rand = { version = "0.8", features = ["getrandom"] }
+rand = { version = "0.8", default-features = false }
+getrandom = {version = "0.2", features = ["wasm-bindgen", "js"]}
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.13"

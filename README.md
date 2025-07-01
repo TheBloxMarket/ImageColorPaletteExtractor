@@ -333,7 +333,7 @@ The algorithm finds the K most representative colors in the image based on color
 ## 🌟 Features & Benefits
 
 - **High Performance**: Written in Rust, compiled to WebAssembly
-- **Easy Integration**: No initialization required - just import and use
+- **Easy Integration**: No initialization required
 - **CORS Friendly**: Automatic proxy fallback for remote images
 - **Accurate Results**: Uses proven K-means++ initialization
 - **Flexible**: Configurable iterations, convergence, and color count
@@ -341,6 +341,10 @@ The algorithm finds the K most representative colors in the image based on color
 - **Type Safe**: Full TypeScript definitions included
 - **Well Tested**: Comprehensive test suite
 - **User Friendly**: Complete demo with drag & drop and URL support
+
+## 📝 License
+
+This project is licensed under the **MIT License**, for more information check the [LICENSE file](./LICENSE).
 
 ## 🤝 Contributing
 
