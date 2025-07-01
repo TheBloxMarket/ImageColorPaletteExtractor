@@ -1,6 +1,6 @@
 [package]
 name = "image_color_palette_extractor"
-version = "0.1.2"
+version = "0.1.4"
 authors = ["RoMarketPlace <tbm@ixstudiodev.com>", "Max Thakur <dev@maxthakur.xyz>"]
 edition = "2018"
 repository = "https://github.com/TheBloxMarket/ImageColorPaletteExtractor"
@@ -22,16 +22,8 @@ serde = { version = "1.0", features = ["derive"] }
 # code size when deploying.
 console_error_panic_hook = { version = "0.1.6", optional = true }
 
-# `wee_alloc` is a tiny allocator for wasm that is only ~1K in code size
-# compared to the default allocator's ~10K. It is slower than the default
-# allocator, however.
-#
-# Unfortunately, `wee_alloc` requires nightly Rust when focusing on wasm for now.
-wee_alloc = { version = "0.4.5", optional = true }
-
 # For k-means clustering functionality
 kmeans_colors = { version = "0.6", default-features = false }
-# For random number generation in WASM
 # For random number generation
 rand = { version = "0.8", default-features = false }
 getrandom = {version = "0.2", features = ["wasm-bindgen", "js"]}
@@ -42,3 +34,4 @@ wasm-bindgen-test = "0.3.13"
 [profile.release]
 # Tell `rustc` to optimize for a small code size.
 opt-level = "s"
+lto = true

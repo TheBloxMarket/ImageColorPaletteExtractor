@@ -1,15 +1,17 @@
-mod utils;
 
 use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
 use kmeans_colors::get_kmeans;
-use utils::set_panic_hook;
 
-// When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
-// allocator.
-#[cfg(feature = "wee_alloc")]
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+
+#[inline]
+pub fn unwrap_abort<T>(o: Option<T>) -> T {
+    use std::process;
+    match o {
+        Some(t) => t,
+        None => process::abort(),
+    }
+}
 
 #[wasm_bindgen]
 extern "C" {
@@ -197,8 +199,6 @@ pub struct PaletteExtractor {
 impl PaletteExtractor {
     #[wasm_bindgen(constructor)]
     pub fn new() -> PaletteExtractor {
-        set_panic_hook();
-        
         PaletteExtractor {
             max_iter: 20,
             converge: 5.0,
@@ -325,7 +325,7 @@ pub fn sort_colors_by_luminance(colors: Vec<Color>) -> Vec<Color> {
         })
         .collect();
 
-    color_luminance.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+    color_luminance.sort_by(|a, b| unwrap_abort(a.1.partial_cmp(&b.1)));
     color_luminance.into_iter().map(|(color, _)| color).collect()
 }
 
