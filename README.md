@@ -1,68 +1,63 @@
-# 🎨 Image Color Palette Extractor
+# Image Color Palette Extractor
 
-A high-performance WebAssembly (WASM) library for extracting color palettes from images using K-means clustering. Built with Rust and based on the excellent [kmeans-colors](https://github.com/okaneco/kmeans-colors) crate.
+A Rust-based WebAssembly library for extracting color palettes from images using K-means clustering. Wraps the [kmeans-colors](https://github.com/okaneco/kmeans-colors) crate with a browser-friendly API.
 
-## ✨ Features
+## Features
 
-- **Fast K-means clustering** - Efficient color palette extraction using the kmeans-colors algorithm
-- **WebAssembly powered** - High performance in the browser with automatic initialization
-- **Remote URL support** - Load images from URLs with automatic CORS handling
-- **File upload support** - Drag & drop or file picker for local images
-- **Flexible API** - Extract palettes, dominant colors, and perform color analysis
-- **Color utilities** - Sort by luminance, remove similar colors, calculate distances
-- **TypeScript support** - Full type definitions included
-- **Comprehensive tests** - Well-tested with WASM browser tests
+- Efficient K-means clustering algorithm for color extraction
+- WASM compilation with web target for optimal browser performance
+- Built-in CORS handling with proxy fallback chain for remote images
+- Native support for browser File API and canvas imageData processing
+- Comprehensive color analysis API (palette extraction, dominant colors)
+- Utility functions for RGB manipulation and comparison
+- Complete TypeScript definitions
+- Cross-browser compatibility with Wasm tests
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
 ```bash
-# Build the WASM library
-wasm-pack build --target web
-
-# The generated files will be in the pkg/ directory
+# Build the WASM library in release mode
+wasm-pack build --target web --release
 ```
 
 ### Basic Usage
 
 ```html
 <!DOCTYPE html>
-<html lang="en-US">
+<html>
 <head>
-    <title>Color Palette Extractor</title>
+    <title>Color Palette Example</title>
 </head>
 <body>
     <script type="module">
         import { PaletteExtractor } from './pkg/image_color_palette_extractor.js';
 
         async function extractPalette() {
-            // Create extractor instance (no init needed)
             const extractor = new PaletteExtractor();
             
-            // Configure (optional)
-            extractor.set_max_iterations(20);
+            // Configure K-means parameters (optional)
+            extractor.set_max_iterations(20); 
             extractor.set_convergence(5.0);
-            extractor.set_verbose(true);
             
             // Get image data from canvas
             const canvas = document.getElementById('myCanvas');
             const ctx = canvas.getContext('2d');
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             
-            // Extract palette (5 colors)
+            // Extract palette with 5 colors
             const palette = extractor.extract_palette_from_pixels(imageData.data, 5);
             
-            // Get results
+            // Process results
             const colors = palette.colors();
             const percentages = palette.percentages();
             
-            // Display results
             colors.forEach((color, index) => {
                 console.log(`Color ${index + 1}: ${color.to_hex()} (${percentages[index].toFixed(1)}%)`);
             });
             
-            // Extract dominant color
+            // Get dominant color (alternative API)
             const dominant = extractor.extract_dominant_color(imageData.data);
             console.log(`Dominant color: ${dominant.to_hex()}`);
         }
@@ -73,109 +68,88 @@ wasm-pack build --target web
 </html>
 ```
 
-## 📖 API Reference
+## API Reference
 
 ### PaletteExtractor
 
-The main class for extracting color palettes.
-
-#### Constructor
+Main extraction class that handles the K-means algorithm implementation.
 
 ```javascript
+// Constructor (no initialization needed, zero overhead)
 const extractor = new PaletteExtractor();
-```
 
-#### Configuration Methods
+// K-means algorithm configuration
+extractor.set_max_iterations(20);     // Maximum iterations (default: 20)
+extractor.set_convergence(5.0);       // Convergence distance threshold (default: 5.0)
+extractor.set_verbose(true);          // Enable debug logging (default: false)
 
-```javascript
-extractor.set_max_iterations(20);     // Set maximum iterations (default: 20)
-extractor.set_convergence(5.0);       // Set convergence threshold (default: 5.0)
-extractor.set_verbose(true);          // Enable/disable verbose logging (default: false)
-```
-
-#### Extraction Methods
-
-```javascript
-// Extract palette from RGBA pixel data
-const palette = extractor.extract_palette_from_pixels(pixelData, k);
-
-// Extract palette from image data with dimensions
-const palette = extractor.extract_palette_from_image_data(imageData, width, height, k);
-
-// Extract dominant color
-const dominantColor = extractor.extract_dominant_color(pixelData);
+// Extraction methods
+const palette = extractor.extract_palette_from_pixels(pixelData, k);  // From raw RGBA array
+const palette = extractor.extract_palette_from_image_data(imageData, width, height, k);  // From ImageData
+const dominantColor = extractor.extract_dominant_color(pixelData);  // Most prominent color
 ```
 
 ### Color
 
-Represents a color with RGB values.
-
-#### Constructor
+RGB color value representation with utility methods.
 
 ```javascript
-const color = new Color(255, 128, 64);
-```
+// Constructor
+const color = new Color(255, 128, 64);  // R, G, B values (0-255)
 
-#### Properties
+// Component access
+const r = color.r();  // Red channel
+const g = color.g();  // Green channel
+const b = color.b();  // Blue channel
 
-```javascript
-color.r()  // Red component (0-255)
-color.g()  // Green component (0-255)
-color.b()  // Blue component (0-255)
-```
-
-#### Methods
-
-```javascript
-color.to_hex()        // Returns "#ff8040"
-color.to_rgb_string() // Returns "rgb(255, 128, 64)"
+// Format conversion
+const hex = color.to_hex();        // "#ff8040"
+const rgb = color.to_rgb_string(); // "rgb(255, 128, 64)"
 ```
 
 ### PaletteResult
 
-Contains the extracted palette information.
-
-#### Methods
+Result container with colors and their statistical distribution.
 
 ```javascript
-palette.colors()       // Array of Color objects
-palette.percentages()  // Array of percentages for each color
-palette.get_color(i)   // Get color at index i
-palette.get_percentage(i) // Get percentage at index i
-palette.length()       // Number of colors in palette
+// Data access
+const allColors = palette.colors();        // Array<Color>
+const allPercentages = palette.percentages();   // Array<number> (percentage of pixels)
+const color = palette.get_color(i);        // Get Color at index i
+const percentage = palette.get_percentage(i);  // Get percentage at index i
+const count = palette.length();            // Number of colors in palette
 ```
 
 ### Utility Functions
 
 ```javascript
-// Sort colors by luminance (dark to light)
+// Luminance-based color sorting (dark to light)
 const sortedColors = sort_colors_by_luminance(colors);
 
-// Calculate RGB distance between two colors
+// Euclidean RGB distance calculation
 const distance = color_distance_rgb(color1, color2);
 
-// Remove similar colors based on threshold
+// Similar color filtering (removes colors below threshold distance)
 const filteredColors = remove_similar_colors(colors, threshold);
 ```
 
-## 🎯 Examples
+## Examples
 
-### Complete Image Upload Example
+### Demo Implementation
 
-See `example.html` for a complete working example with:
-- Image upload (drag & drop or file picker)
-- Remote image URL loading with CORS proxy fallback
+See `example.html` for a reference implementation demonstrating:
+- File input handling (drag & drop + file picker)
+- Remote URL loading with CORS fallbacks
 - Canvas-based image processing
-- Palette extraction and display
-- Color copying functionality
-- Error handling and loading states
+- Configurable palette extraction
+- DOM result visualization
 
-### Remote Image URL Support
+### CORS Handling
 
-The library supports loading images from remote URLs with automatic CORS handling:
+The library implements a cascading proxy approach for CORS:
 
 ```javascript
-// The example.html includes robust URL loading with multiple CORS proxy fallbacks
+// Available CORS proxies (ordered by preference)
 const corsProxies = [
     `https://cors-anywhere.herokuapp.com/`,
     `https://api.allorigins.win/raw?url=`,
@@ -183,19 +157,13 @@ const corsProxies = [
     `https://cors.bridged.cc/`
 ];
 
-// Try direct loading first, then fallback to proxies if CORS blocks the request
+// Implementation attempts direct loading then tries each proxy sequentially
 ```
 
-Supported URL examples:
-- `https://picsum.photos/400/300` - Random images
-- `https://images.unsplash.com/photo-1506905925346-21bda4d32df4` - Unsplash images  
-- `https://httpbin.org/image/jpeg` - Test images
-
-### Processing Different Image Sources
+### Input Sources
 
 ```javascript
 // From file input
-const fileInput = document.getElementById('fileInput');
 fileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     const img = new Image();
@@ -208,18 +176,18 @@ fileInput.addEventListener('change', async (e) => {
         
         const imageData = ctx.getImageData(0, 0, img.width, img.height);
         const palette = extractor.extract_palette_from_pixels(imageData.data, 8);
-        // Process palette...
+        // Process palette
     };
     img.src = URL.createObjectURL(file);
 });
 
-// From existing canvas
+// From canvas element
 const canvas = document.getElementById('myCanvas');
 const ctx = canvas.getContext('2d');
 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 const palette = extractor.extract_palette_from_pixels(imageData.data, 5);
 
-// From webcam
+// From webcam stream
 navigator.mediaDevices.getUserMedia({ video: true })
     .then(stream => {
         const video = document.createElement('video');
@@ -235,122 +203,116 @@ navigator.mediaDevices.getUserMedia({ video: true })
             
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const palette = extractor.extract_palette_from_pixels(imageData.data, 6);
-            // Process palette...
+            // Process palette
         });
     });
 ```
 
-## 🌐 CORS Handling
+## CORS Implementation Details
 
-The library includes robust Cross-Origin Resource Sharing (CORS) handling for remote images:
+The library handles CORS using the following strategy:
 
-### Automatic Proxy Fallback
-
-When loading images from remote URLs, the library automatically handles CORS restrictions:
-
-1. **Direct Loading**: First attempts to load the image directly with `crossOrigin = 'anonymous'`
-2. **Proxy Fallback**: If CORS blocks the request, automatically tries multiple proxy services:
-   - `cors-anywhere.herokuapp.com` (primary)
-   - `api.allorigins.win` (secondary) 
-   - `corsproxy.io` (tertiary)
-   - `cors.bridged.cc` (fallback)
-3. **Error Handling**: Provides clear feedback if all methods fail
-
-### Usage
+1. Initial attempt: Direct image fetch with `crossOrigin = 'anonymous'`
+2. Fallback chain: Sequential proxy attempts on failure
+3. Error propagation if all attempts fail
 
 ```javascript
-// Just provide any image URL - CORS is handled automatically
-const imageUrl = "https://example.com/image.jpg";
-loadImageFromUrl(imageUrl); // Handles CORS internally
+// The implementation abstracts away CORS complexity
+function loadImage(url) {
+    // CORS handling is internal - no special user code needed
+    return fetch(url)
+        .then(/* processing */);
+}
 ```
 
-This makes it easy to work with images from any source without worrying about CORS configuration.
+## Development
 
-## 🔧 Development
-
-### Building
+### Build Process
 
 ```bash
-# Install dependencies
-cargo build
-
-# Build for WASM (creates pkg/ directory)
+# Development build
 wasm-pack build --target web
 
-# The generated files will be in pkg/:
-# - image_color_palette_extractor.js (main module)
+# Release build with optimizations
+wasm-pack build --target web --release
+
+# Output artifacts in pkg/:
+# - image_color_palette_extractor.js (JS interface)
 # - image_color_palette_extractor_bg.wasm (WASM binary)
-# - image_color_palette_extractor.d.ts (TypeScript definitions)
+# - image_color_palette_extractor.d.ts (TS definitions)
+# - Additional metadata files
 ```
 
-### Testing the Demo
+### Local Testing
 
 ```bash
-# After building, open either demo file in your browser
-# example.html - Full-featured demo with file upload and URL support
-# test.html - Quick test interface
-
-# Or serve via a local server (required for WASM modules)
+# WASM modules require proper MIME types, use a local server:
 python -m http.server 8000
-# Then open http://localhost:8000/example.html
+# Then navigate to http://localhost:8000/example.html
+
+# Available demo files:
+# - example.html: Full implementation with all features
+# - test.html: Minimal test implementation
 ```
 
-### Testing
+### Running Tests
 
 ```bash
-# Run Rust tests
-cargo test
-
-# Run WASM tests in browser
+# Browser-based WASM tests (headless)
 wasm-pack test --headless --firefox
+
+# Multiple browser testing
+wasm-pack test --headless --chrome --firefox
 ```
+
+> [!NOTE]
+> Standard `cargo test` is not compatible with this WASM project. Always use `wasm-pack test`.
 
 ### Project Structure
 
 ```
 ├── src/
-│   ├── lib.rs      # Main WASM library code
-│   └── utils.rs    # Utility functions (panic hooks, etc.)
+│   ├── lib.rs      # Core library implementation
+│   └── utils.rs    # WASM utility functions
 ├── tests/
-│   └── web.rs      # WASM browser tests
-├── pkg/            # Generated WASM files (after build)
-├── example.html    # Complete demo with file upload and URL support
-├── test.html       # Quick test interface
-└── README.md       # This file
+│   └── web.rs      # Browser-based test suite
+├── pkg/            # Build artifacts (generated)
+├── example.html    # Full-featured demo
+├── test.html       # Minimal test interface
+└── Cargo.toml      # Rust dependencies and config
 ```
 
-## 🎨 How K-means Clustering Works
+## Implementation Details: K-means Algorithm
 
-K-means clustering groups pixels with similar colors together:
+The core color extraction utilizes K-means clustering:
 
-1. **Initialization**: Start with K random color centroids
-2. **Assignment**: Assign each pixel to the nearest centroid
-3. **Update**: Recalculate centroids as the average of assigned pixels
-4. **Repeat**: Continue until convergence or max iterations reached
+1. **Initialization**: K random centroids in RGB space (uses k-means++ seeding)
+2. **Assignment**: Each pixel assigned to nearest centroid by Euclidean distance
+3. **Update**: Recalculate centroids as mean of all assigned pixels
+4. **Iteration**: Repeat steps 2-3 until convergence threshold or max iterations
 
-The algorithm finds the K most representative colors in the image based on color similarity in RGB space.
+This implementation operates directly in RGB space and is optimized for performance.
 
-## 🌟 Features & Benefits
+## Technical Advantages
 
-- **High Performance**: Written in Rust, compiled to WebAssembly
-- **Easy Integration**: No initialization required
-- **CORS Friendly**: Automatic proxy fallback for remote images
-- **Accurate Results**: Uses proven K-means++ initialization
-- **Flexible**: Configurable iterations, convergence, and color count
-- **Browser Native**: No external dependencies, runs entirely in the browser
-- **Type Safe**: Full TypeScript definitions included
-- **Well Tested**: Comprehensive test suite
-- **User Friendly**: Complete demo with drag & drop and URL support
+- **Performance**: Native Rust speed with WASM compilation
+- **Zero Overhead**: No runtime initialization requirements
+- **CORS Handling**: Multi-stage proxy fallback implementation
+- **Algorithm Quality**: K-means++ initialization for better clustering
+- **Configurability**: Tunable algorithm parameters
+- **Browser Compatibility**: Pure WASM/JS with no external dependencies
+- **Type Safety**: Comprehensive TypeScript definitions
+- **Test Coverage**: Browser-based test suite with headless capabilities
 
-## 📝 License
+## License
 
-This project is licensed under the **MIT License**, for more information check the [LICENSE file](./LICENSE).
+MIT licensed. See [LICENSE](./LICENSE) for details.
 
-## 🤝 Contributing
+## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions welcome via standard pull request workflow. Please ensure tests pass before submitting.
 
-## 🙏 Acknowledgments
+## Credits
 
-- Built on top of the excellent [kmeans-colors](https://github.com/okaneco/kmeans-colors) crate
-- Inspired by various color palette extraction tools and libraries
+- Based on [kmeans-colors](https://github.com/okaneco/kmeans-colors) Rust crate
+- Adapted for WebAssembly browser usage

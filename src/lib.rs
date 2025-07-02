@@ -1,8 +1,32 @@
 
+// This crate uses wee_alloc for memory allocation in WebAssembly.
+// wee_alloc is a tiny allocator designed for WebAssembly that has a small code size footprint.
+// It trades off performance for smaller code size, which is ideal for WASM modules
+// where download size is a critical factor.
+//
+// The wee_alloc feature is enabled by default in Cargo.toml.
+
 use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
 use kmeans_colors::get_kmeans;
 
+// Use `wee_alloc` as the global allocator to reduce the code size.
+// The WebAssembly binary will be smaller at the cost of slightly worse memory
+// allocation performance.
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+
+// When in a WASM environment, this function sets a panic hook to log errors to the console.
+// This improves debugging experience in the browser.
+#[cfg(debug_assertions)]
+#[cfg(target_arch = "wasm32")]
+pub fn set_panic_hook() {
+    // When compiling for web, provide better error messages when panics happen.
+    std::panic::set_hook(Box::new(|info| {
+        // Log the panic information to the console
+        log(&format!("WASM panic: {:?}", info));
+    }));
+}
 
 #[inline]
 pub fn unwrap_abort<T>(o: Option<T>) -> T {
@@ -20,6 +44,7 @@ extern "C" {
 }
 
 // Macro for logging to console
+#[macro_export]
 macro_rules! console_log {
     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
 }
@@ -199,6 +224,11 @@ pub struct PaletteExtractor {
 impl PaletteExtractor {
     #[wasm_bindgen(constructor)]
     pub fn new() -> PaletteExtractor {
+        // Set up panic handling when in a browser environment
+        #[cfg(debug_assertions)]
+        #[cfg(target_arch = "wasm32")]
+        set_panic_hook();
+        
         PaletteExtractor {
             max_iter: 20,
             converge: 5.0,
