@@ -4,7 +4,7 @@
 
 extern crate wasm_bindgen_test;
 use wasm_bindgen_test::*;
-use image_color_palette_extractor::*;
+use image_color_extractor::*;
 
 wasm_bindgen_test_configure!(run_in_browser);
 
