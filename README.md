@@ -6,7 +6,6 @@ A Rust-based WebAssembly library for extracting color palettes from images using
 
 - Efficient K-means clustering algorithm for color extraction
 - WASM compilation with web target for optimal browser performance
-- Built-in CORS handling with proxy fallback chain for remote images
 - Native support for browser File API and canvas imageData processing
 - Comprehensive color analysis API (palette extraction, dominant colors)
 - Utility functions for RGB manipulation and comparison
@@ -158,6 +157,87 @@ const corsProxies = [
 ];
 
 // Implementation attempts direct loading then tries each proxy sequentially
+```
+
+### Next.js
+
+To use this library in Next.js, you must use the `import` import.
+
+```typescript
+"use client";
+import { PaletteExtractor } from "@tbmwebui/image_color_extractor";
+
+/**
+ * Initializes the palette extractor WASM module for client-side color extraction
+ *
+ * @returns A Promise that resolves to a new instance of PaletteExtractor
+ * @throws Error if called on the server side where window is undefined
+ */
+export async function initializePaletteExtractor(): Promise<PaletteExtractor> {
+    // Ensure this runs only on the client side
+    if (typeof window === "undefined") {
+        throw new Error("WASM module can only be loaded on the client side.");
+    }
+
+    // Dynamically import the WASM module
+    const { default: initWasm } = await import("@tbmwebui/image_color_extractor/");
+
+    // Initialize the WASM module (no need to specify a path if the package handles it internally)
+    await initWasm();
+
+    // Return a new instance of PaletteExtractor
+    return new PaletteExtractor();
+}
+
+/**
+ * Extracts dominant colors from a canvas element using the WASM-based color extractor
+ *
+ * @param canvas - HTML Canvas element containing the image data
+ * @param numberOfColors - Number of dominant colors to extract (default: 2)
+ * @param verbose - Whether to log detailed extraction information to console (default: false)
+ * @returns A Promise that resolves to an array of hex color strings
+ * @throws Error if unable to get canvas context or image data
+ */
+export async function GetColorsFromCanvas(
+    canvas: HTMLCanvasElement,
+    numberOfColors = 2,
+    verbose = false
+) {
+    const extractor = await initializePaletteExtractor();
+    extractor.set_verbose(verbose);
+
+    // get image data from canvas
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+        throw new Error("Failed to get canvas context");
+    }
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    if (!imgData || !imgData.data) {
+        throw new Error("Failed to get image data from canvas");
+    }
+
+    // extract colors
+    const palette = extractor.extract_palette_from_pixels(new Uint8Array(imgData.data), numberOfColors);
+
+    // Get results
+    const colors = palette.colors;
+    const percentages = palette.percentages;
+
+    // display results
+    if (verbose) {
+        console.log("Extracted colors:", colors);
+        console.log("Color percentages:", percentages);
+    }
+
+    // Convert colors to hex format
+    const hexColors = colors.map((color) => color.to_hex());
+    if (verbose) {
+        console.log("Hex colors:", hexColors);
+    }
+    return hexColors;
+}
+
+
 ```
 
 ### Input Sources
